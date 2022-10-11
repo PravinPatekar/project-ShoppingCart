@@ -2,9 +2,9 @@ const userModel = require("../model/userModel")
 const imgUpload=require('../AWS/aws')
 const mongoose= require('mongoose')
 const bcrypt = require('bcrypt')
-const validator = require('validator')
+const jwt =require("jsonwebtoken")
 
-const { isValid,pincodeValid, keyValid } = require('../validator')
+const { isValid,pincodeValid, keyValid } = require('../validator/validator')
 
 
 ////////////////////////// CREATE USER API /////////////////////////
@@ -68,7 +68,7 @@ const createUser = async function (req, res) {
  
              if (!isValid(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in Shipping" })
  
-             if (!pincodeValid.test(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with  6 number in Shipping" })
+             if (!pincodeValid(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with  6 number in Shipping" })
          } else {
              return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
          }
@@ -82,7 +82,7 @@ const createUser = async function (req, res) {
  
              if (!isValid(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in billing" })
  
-             if (!pincodeValid.test(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with  6 number in billing" })
+             if (!pincodeValid(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with  6 number in billing" })
  
          } else {
              return res.status(400).send({ status: false, message: "Please provide address for billing" })
@@ -93,7 +93,7 @@ const createUser = async function (req, res) {
 
 
         let obj = {
-            fname, lname, email, phone,profileImage:profileImage1, password, encyptPassword, address: addressParse
+            fname, lname, email, phone,profileImage:profileImage1, password: encyptPassword, address: addressParse
         }
 
         const newUser = await userModel.create(obj)
@@ -107,7 +107,8 @@ const createUser = async function (req, res) {
 
 
 //////////////////////////login///////////////////////////
-const loginUser = async function(req, res) {
+const loginUser = 
+async function(req, res) {
     try {
         let data = req.body
         const { email, password } = data
@@ -126,6 +127,7 @@ const loginUser = async function(req, res) {
         if (!user) return res.status(400).send({ status: false, msg: "Email is Invalid Please try again !!" })
 
         const verifyPassword=await bcrypt.compare(password,user.password)
+        
 
         if(!verifyPassword) return res.status(400).send({ status: false, msg: "Password is Invalid Please try again !!" })
 
@@ -178,20 +180,21 @@ const getUser = async function (req, res) {
   //////////////////////////////////////// PUT API////////////////////////////////////////
   updateUserProfile = async (req, res) => {
     try {
-        let UserId = req.params.UserId
+        let UserId = req.params.userId
 
         const { fname, lname, email, profileImage, phone, password, address } = req.body
-
+        // console.log(UserId)
         if (Object.keys(req.body).length == 0)
             return res.status(400).send({ status: false, msg: "Please Enter user Details For Updating" })
-
-        if (UserId) {
-            return res.status(400).send({ status: false, msg: "UserId must be present" })
-        }
+            // console.log(UserId)
+        // if (!UserId) {
+        //     return res.status(400).send({ status: false, msg: "UserId must be present" })
+        // }
 
         if (!mongoose.Types.ObjectId.isValid(UserId)) {
             return res.status(400).send({ status: false, msg: "this  UserId is not a valid Id" })
         }
+        // console.log(UserId)
 
         let findUserId = await userModel.findById(UserId)
         if (!findUserId) {
@@ -200,9 +203,10 @@ const getUser = async function (req, res) {
         if (fname) {
             if (fname.trim().length == 0) return res.status(400).send({ status: false, msg: "Please enter a valid fname" })
         }
-        if (!(/^[A-Z][a-z,.'-]+(?: [A-Z][a-z,.'-]+)*$/).test(fname)){
-            return res.status(400).send({ status: false, message: "Please Provide fname in valid formate and Should Starts with Capital Letter" })
-         }
+        console.log(fname)
+        // if (!(/^[A-Z][a-z,.'-]+(?: [A-Z][a-z,.'-]+)*$/).test(fname)){
+        //     return res.status(400).send({ status: false, message: "Please Provide fname in valid formate and Should Starts with Capital Letter"})
+        //  }
 
         if (lname) {
             if (lname.trim().length == 0) return res.status(400).send({ status: false, msg: "Please enter a valid lname" })
@@ -215,9 +219,9 @@ const getUser = async function (req, res) {
             }
         }
 
-        if (profileImage) {
-            if (profileImage.trim().length == 0) return res.status(400).send({ status: false, msg: "Please enter a valid profileImage" })
-        }
+        // if (profileImage) {
+        //     if (profileImage.trim().length == 0) return res.status(400).send({ status: false, msg: "Please enter a valid profileImage" })
+        // }
 
         if (phone) {
             if (phone.trim().length == 0) return res.status(400).send({ status: false, msg: "Please enter a valid phone" })
@@ -244,9 +248,11 @@ const getUser = async function (req, res) {
             return res.status(400).send({ status: false, msg: "User with this phone number is already registered" })
         }
 
-        const addressParse = JSON.parse(address)  //  convert Object
+        // const addressParse = JSON.parse(address)  //  convert Object
         //  console.log(addressParse)
-        
+           if(address){
+            const addressParse = JSON.parse(address)
+           
 
          if (addressParse.shipping) {
              if (!keyValid(addressParse.shipping)) return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
@@ -276,6 +282,7 @@ const getUser = async function (req, res) {
          } else {
              return res.status(400).send({ status: false, message: "Please provide address for billing" })
          }
+        }
         let updatedUser = await userModel.findOneAndUpdate({ _id: UserId }, {
             $set: {
                 fname: fname,

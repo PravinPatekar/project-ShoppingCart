@@ -16,11 +16,15 @@ const isValid = function (value) {
     //   };
    // const isValidImg = /([a-zA-Z0-9\s_\\.\-:])+(.png|.jpg|.gif)$/
 
-      const pincodeValid=/^(\d{6})$/
+      const pincodeValid=function (value){
+        let pin =/^(\d{6})$/;
+        if(pin.test(value)) return true;
+        return false;
+      }
   
       const keyValid = function (value) {
         if (Object.keys(value).length > 0) return true;
         return false;
       };
   
-      module.exports={isValid,isValidName,isvalidEmail,isvalidMobile,isValidPassword,pincodeValid,keyValid}
+      module.exports={isValid,pincodeValid,keyValid}
