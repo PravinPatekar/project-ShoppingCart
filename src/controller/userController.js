@@ -1,9 +1,10 @@
 const userModel = require("../model/userModel")
-const imgUpload=require('../')
-
+const imgUpload=require('../AWS/aws')
+const mongoose= require('mongoose')
 const bcrypt = require('bcrypt')
+const validator = require('validator')
 
-const { isValid, isValidName, isvalidEmail, isvalidMobile, isValidPassword, pincodeValid, keyValid } = require('../validator')
+const { isValid,pincodeValid, keyValid } = require('../validator')
 
 
 ////////////////////////// CREATE USER API /////////////////////////
@@ -13,75 +14,86 @@ const createUser = async function (req, res) {
         const data = req.body
         const files = req.files
 
-        const { fname, lname, email, profileImage, phone, password, address } = data
+        const { fname, lname, email,profileImage, phone, password, address } = data
 
-        if (!isValid(fname)) return res.status(400).send({ status: false, message: "fname is mandatory and should have non empty String" })
+        if (!(fname)) return res.status(400).send({ status: false, message: "fname is mandatory and should have non empty String" })
 
-        if (!isValidName.test(fname)) return res.status(400).send({ status: false, message: "Please Provide fname in valid formate and Should Starts with Capital Letter" })
-
+        if (!(/^[A-Z][a-z,.'-]+(?: [A-Z][a-z,.'-]+)*$/).test(fname)){
+                     return res.status(400).send({ status: false, message: "Please Provide fname in valid formate and Should Starts with Capital Letter" })
+              }
         if (!isValid(lname)) return res.status(400).send({ status: false, message: "lname is mandatory and should have non empty String" })
 
-        if (!isValidName.test(lname)) return res.status(400).send({ status: false, message: "Please Provide lname in valid formate and Should Starts with Capital Letter" })
-
+        if (!(/^[A-Z][a-z,.'-]+(?: [A-Z][a-z,.'-]+)*$/).test(lname)){
+                   return res.status(400).send({ status: false, message: "Please Provide lname in valid formate and Should Starts with Capital Letter" })
+        }
         if (!isValid(email)) return res.status(400).send({ status: false, message: "email is mandatory and should have non empty String" })
 
-        if (!isvalidEmail.test(email)) return res.status(400).send({ status: false, message: "email should be in  valid Formate" })
+        if (!(/^[a-z0-9_]{1,}@[a-z]{3,10}[.]{1}[a-z]{3}$/).test(email)) {
+               return res.status(400).send({ status: false, message: "email should be in  valid Formate" })
+        }
+        if (await userModel.findOne({ email })) 
+                return res.status(400).send({ status: false, message: "This email is already Registered Please give another Email" })
 
-        if (await userModel.findOne({ email })) return res.status(400).send({ status: false, message: "This email is already Registered Please give another Email" })
+        if (!keyValid(files))
+                    return res.status(400).send({ status: false, message: "profile Image is Mandatory" })
 
-        // if (!keyValid(files)) return res.status(400).send({ status: false, message: "profile Image is Mandatory" })
+     //if(!isValidImg.test(profileImage)) return res.status(400).send({status:false,message:"profile Image should be valid with this extensions .png|.jpg|.gif"})
 
         if (!isValid(phone)) return res.status(400).send({ status: false, message: "Phone is mandatory and should have non empty Number" })
 
-        if (!isvalidMobile.test(phone)) return res.status(400).send({ status: false, message: "please provide Valid phone Number with 10 digits starts with 6||7||8||9" })
-
-        if (await userModel.findOne({ phone })) return res.status(400).send({ status: false, message: "This Phone is already Registered Please give another Phone" })
+        if (!(/^[6-9]\d{9}$/).test(phone)){
+             return res.status(400).send({ status: false, message: "please provide Valid phone Number with 10 digits starts with 6||7||8||9" })
+        }
+        if (await userModel.findOne({ phone }))
+               return res.status(400).send({ status: false, message: "This Phone is already Registered Please give another Phone" })
 
         if (!isValid(password)) return res.status(400).send({ status: false, message: "Password is mandatory and should have non empty String" })
 
-        if (!isValidPassword(password)) return res.status(400).send({ status: false, message: "please provide Valid password with 1st letter should be Capital letter and contains spcial character with Min length 8 and Max length 15" })
-
+        if (!(/^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,15}$/).test(password)) {
+             return res.status(400).send({ status: false, message: "please provide Valid password with 1st letter should be Capital letter and contains spcial character with Min length 8 and Max length 15" })
+        }
         if (!isValid(address)) return res.status(400).send({ status: false, message: "Address is mandatory" })
 
 
         const addressParse = JSON.parse(address)  //  convert Object
+        //  console.log(addressParse)
+        
 
-        if (addressParse.shipping) {
-            if (!keyValid(addressParse.shipping)) return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
+         if (addressParse.shipping) {
+             if (!keyValid(addressParse.shipping)) return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
+ 
+             if (!isValid(addressParse.shipping.street)) return res.status(400).send({ status: false, message: "Street is mandatory and should have non empty String in Shipping" })
+ 
+             if (!isValid(addressParse.shipping.city)) return res.status(400).send({ status: false, message: "city is mandatory and should have non empty String in Shipping" })
+ 
+             if (!isValid(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in Shipping" })
+ 
+             if (!pincodeValid.test(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with  6 number in Shipping" })
+         } else {
+             return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
+         }
+ 
+         if (addressParse.billing) {
+             if (!keyValid(addressParse.billing)) return res.status(400).send({ status: false, message: "Please provide address for billing" })
+ 
+             if (!isValid(addressParse.billing.street)) return res.status(400).send({ status: false, message: "Street is mandatory and should have non empty String in billing" })
+ 
+             if (!isValid(addressParse.billing.city)) return res.status(400).send({ status: false, message: "city is mandatory and should have non empty String in billing" })
+ 
+             if (!isValid(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in billing" })
+ 
+             if (!pincodeValid.test(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with  6 number in billing" })
+ 
+         } else {
+             return res.status(400).send({ status: false, message: "Please provide address for billing" })
+         }
+        let profileImage1 = await imgUpload.uploadFile(files[0])
 
-            if (!isValid(addressParse.shipping.street)) return res.status(400).send({ status: false, message: "Street is mandatory and should have non empty String in Shipping" })
-
-            if (!isValid(addressParse.shipping.city)) return res.status(400).send({ status: false, message: "city is mandatory and should have non empty String in Shipping" })
-
-            if (!isValid(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in Shipping" })
-
-            if (!pincodeValid.test(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with min 4 number || max 6 number in Shipping" })
-        } else {
-            return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
-        }
-
-        if (addressParse.billing) {
-            if (!keyValid(addressParse.billing)) return res.status(400).send({ status: false, message: "Please provide address for billing" })
-
-            if (!isValid(addressParse.billing.street)) return res.status(400).send({ status: false, message: "Street is mandatory and should have non empty String in billing" })
-
-            if (!isValid(addressParse.billing.city)) return res.status(400).send({ status: false, message: "city is mandatory and should have non empty String in billing" })
-
-            if (!isValid(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in billing" })
-
-            if (!pincodeValid.test(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with min 4 number || max 6 number in billing" })
-
-        } else {
-            return res.status(400).send({ status: false, message: "Please provide address for billing" })
-        }
-
-        // let profileImage1 = await imgUpload.uploadFile(files[0])
-
-        const encyptPassword = await bcrypt.hash(password, 10)
+        const encyptPassword = await bcrypt.hash(password,10)
 
 
         let obj = {
-            fname, lname, email, profileImage, phone, password: encyptPassword, address: addressParse
+            fname, lname, email, phone,profileImage:profileImage1, password, encyptPassword, address: addressParse
         }
 
         const newUser = await userModel.create(obj)
@@ -138,40 +150,32 @@ const loginUser = async function(req, res) {
 
 
 
-//////////////////////////Get API//////////////////////////
+////////////////////////////////////////////Get API//////////////////////////////////////
 
 const getUser = async function (req, res) {
     try {
       const userId = req.params.userId;
-      const body = req.body;
+    //   const body = req.body;
   
-      if (!(validator.isValidobjectId(userId) && validator.isValid(userId))) {
-        return res
-          .status(400)
-          .send({ status: false, msg: "userId is not valid" });
+      if (!(isValid(userId) && isValid(userId))) {
+        return res.status(400).send({ status: false, msg: "userId is not valid" });
       }
-      if (validator.isValidBody(body)) {
-        return res
-          .status(400)
-          .send({ status: false, msg: "body should be empty" });
-      }
+    //   if (validator.isValid(body)) {
+        // return res.status(400).send({ status: false, msg: "body should not be empty" });
+    //   }
   
       const userData = await userModel.findById({ _id: userId });
       if (userData) {
-        return res
-          .status(200)
-          .send({ status: true, msg: "user profile details", data: userData });
+        return res.status(200).send({ status: true, msg: "user profile details", data: userData });
       } else {
-        return res
-          .status(404)
-          .send({ status: false, msg: "userid does not exist" });
+        return res.status(404).send({ status: false, msg: "userid does not exist" });
       }
     } catch (err) {
       return res.status(500).send({ status: false, msg: err.message });
     }
   };
 
-  ////////////////////////// PUT API//////////////////////////
+  //////////////////////////////////////// PUT API////////////////////////////////////////
   updateUserProfile = async (req, res) => {
     try {
         let UserId = req.params.UserId
@@ -180,11 +184,13 @@ const getUser = async function (req, res) {
 
         if (Object.keys(req.body).length == 0)
             return res.status(400).send({ status: false, msg: "Please Enter user Details For Updating" })
+
         if (UserId) {
             return res.status(400).send({ status: false, msg: "UserId must be present" })
         }
+
         if (!mongoose.Types.ObjectId.isValid(UserId)) {
-            return res.status(400).send({ status: false, msg: `this  UserId is not a valid Id` })
+            return res.status(400).send({ status: false, msg: "this  UserId is not a valid Id" })
         }
 
         let findUserId = await userModel.findById(UserId)
@@ -194,6 +200,9 @@ const getUser = async function (req, res) {
         if (fname) {
             if (fname.trim().length == 0) return res.status(400).send({ status: false, msg: "Please enter a valid fname" })
         }
+        if (!(/^[A-Z][a-z,.'-]+(?: [A-Z][a-z,.'-]+)*$/).test(fname)){
+            return res.status(400).send({ status: false, message: "Please Provide fname in valid formate and Should Starts with Capital Letter" })
+         }
 
         if (lname) {
             if (lname.trim().length == 0) return res.status(400).send({ status: false, msg: "Please enter a valid lname" })
@@ -236,35 +245,37 @@ const getUser = async function (req, res) {
         }
 
         const addressParse = JSON.parse(address)  //  convert Object
+        //  console.log(addressParse)
+        
 
-        if (addressParse.shipping) {
-            if (!keyValid(addressParse.shipping)) return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
-
-            if (!isValid(addressParse.shipping.street)) return res.status(400).send({ status: false, message: "Street is mandatory and should have non empty String in Shipping" })
-
-            if (!isValid(addressParse.shipping.city)) return res.status(400).send({ status: false, message: "city is mandatory and should have non empty String in Shipping" })
-
-            if (!isValid(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in Shipping" })
-
-            if (!pincodeValid.test(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with min 4 number || max 6 number in Shipping" })
-        } else {
-            return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
-        }
-
-        if (addressParse.billing) {
-            if (!keyValid(addressParse.billing)) return res.status(400).send({ status: false, message: "Please provide address for billing" })
-
-            if (!isValid(addressParse.billing.street)) return res.status(400).send({ status: false, message: "Street is mandatory and should have non empty String in billing" })
-
-            if (!isValid(addressParse.billing.city)) return res.status(400).send({ status: false, message: "city is mandatory and should have non empty String in billing" })
-
-            if (!isValid(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in billing" })
-
-            if (!pincodeValid.test(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with min 4 number || max 6 number in billing" })
-
-        } else {
-            return res.status(400).send({ status: false, message: "Please provide address for billing" })
-        }
+         if (addressParse.shipping) {
+             if (!keyValid(addressParse.shipping)) return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
+ 
+             if (!isValid(addressParse.shipping.street)) return res.status(400).send({ status: false, message: "Street is mandatory and should have non empty String in Shipping" })
+ 
+             if (!isValid(addressParse.shipping.city)) return res.status(400).send({ status: false, message: "city is mandatory and should have non empty String in Shipping" })
+ 
+             if (!isValid(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in Shipping" })
+ 
+             if (!pincodeValid.test(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with  6 number in Shipping" })
+         } else {
+             return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
+         }
+ 
+         if (addressParse.billing) {
+             if (!keyValid(addressParse.billing)) return res.status(400).send({ status: false, message: "Please provide address for billing" })
+ 
+             if (!isValid(addressParse.billing.street)) return res.status(400).send({ status: false, message: "Street is mandatory and should have non empty String in billing" })
+ 
+             if (!isValid(addressParse.billing.city)) return res.status(400).send({ status: false, message: "city is mandatory and should have non empty String in billing" })
+ 
+             if (!isValid(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in billing" })
+ 
+             if (!pincodeValid.test(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with  6 number in billing" })
+ 
+         } else {
+             return res.status(400).send({ status: false, message: "Please provide address for billing" })
+         }
         let updatedUser = await userModel.findOneAndUpdate({ _id: UserId }, {
             $set: {
                 fname: fname,
@@ -277,17 +288,19 @@ const getUser = async function (req, res) {
             },
         }, { new: true })
 
+               
 
         return res.status(200).send({ status: true, message: "user data", data: updatedUser })
 
 
-    } catch (error) {
-        return res.send(500).status({ status: false, message: error.error })
-    }
+    } catch (err) {
+        return res.status(500).send({ status: false, msg: err.message });
+      }
+
 }
+   
 module.exports.createUser = createUser;
 module.exports.loginUser = loginUser;
-
 module.exports.getUser = getUser;
 module.exports.updateUserProfile = updateUserProfile;
 
