@@ -41,7 +41,7 @@ const Authentication = async function (req, res, next) {
   const Authorization = async (req, res, next) => {
       try {
           let loggedInUser = req.params.userId;
-      
+          let loginUser;
           
           if(loggedInUser){
              if(!isValidObjectId(req.params.userId)) 
@@ -50,10 +50,10 @@ const Authentication = async function (req, res, next) {
             if(!checkUserId) 
               return res.status(404).send({ status: false, message: "User not found" });
             
-            checkUserId = checkUserId._id.toString();
+            loginUser = checkUserId._id.toString();
           }
       
-          if(loggedInUser !== checkUserId) 
+          if(loggedInUser !== loginUser) 
             return res.status(403).send({ status: false, message: "Error!! authorization failed" });
           
           next();
