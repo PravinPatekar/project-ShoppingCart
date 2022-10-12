@@ -1,30 +1,11 @@
-
-//  const Authentication = (req,res,next)=>{
-
-//     try {
-//            let token = req.Authorization["x-api-key"]
-//            if(!token){
-//             return res.status(400).send({status:false,msg:"token must be present"})
-
-//            } 
-//            jwt.verify(token,"functionupisWaYwAyCoOlproject5group62",function(error,decoded){
-//            if(error){
-//             return res.status(401).send({status:false,msg:"this a invalid token"})
-//            }else{
-//             decodedtoken = decoded
-//             next()
-//            }
-
-//            })
-      
-//     } catch (error) {
-//         return res.status(500).send({status:false,message:error.error})
-//     }
-//  }
 const jwt = require("jsonwebtoken");    // Importing JWT
 const userModel = require("../model/userModel");     // Importing User Model
-const  isValidobject = require("../validator/validator");  // IMPORTING VALIDATORS
 const mongoose = require('mongoose')
+
+
+const isValidObjectId = function (objectid) {
+  return mongoose.Types.ObjectId.isValid(objectid)
+}
 
 //=================================================   [MIDDLEWARES]  ===========================================================//
 
@@ -63,11 +44,8 @@ const Authentication = async function (req, res, next) {
         //   let loginUser;
           
           if(loggedInUser){
-            // if(!isValidobject(req.params.userId)) 
-            //   return res.status(400).send({ status: false, message: "Enter a valid user Id" });
-            if (!mongoose.Types.ObjectId.isValid(userId)) {
-                return res.status(400).send({ status: false, msg: "this  UserId is not a valid Id" })
-            }
+             if(!isValidObjectId(req.params.userId)) 
+               return res.status(400).send({ status: false, message: "Enter a valid user Id" });
             let checkUserId = await userModel.findById(req.params.userId);
             if(!checkUserId) 
               return res.status(404).send({ status: false, message: "User not found" });
