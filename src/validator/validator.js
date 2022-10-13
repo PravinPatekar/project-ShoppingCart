@@ -1,8 +1,16 @@
-const isValid = function (value) {
-    if (typeof value === 'undefined' || value === null) return false
-    if (typeof value === 'string'&&value ==='Number'&& value.trim().length === 0) return false
-    return true
-    }
+// const isValid =  (value) =>{
+//     if (typeof value === 'undefined' || value === null|| typeof value === "boolean" || typeof value === "number") return false
+//     if (typeof value === 'string'&& value.trim().length === 0) return false
+//     if (typeof value === "object" && Object.keys(value).length === 0) return false;
+//     return true
+//     }
+         const isValid = (value) => {
+        if (typeof value === "undefined" || value === null || typeof value === "boolean" || typeof value === "number") return false;
+        if (typeof value === "string" && value.trim().length === 0) return false;
+        if (typeof value === "object" && Object.keys(value).length === 0) return false;
+      
+        return true;
+      };
   
      const isValidName =function (value){
         let name =/^[A-Z][a-z,.'-]+(?: [A-Z][a-z,.'-]+)*$/
@@ -42,5 +50,22 @@ const isValid = function (value) {
         if(price.test(value)) return true;
         return false;
     };
+
+    // string regex
+const strRegex = (value) => {
+  let strRegex = /^[A-Za-z\s]{0,}[\.,'-]{0,1}[A-Za-z\s]{0,}[\.,'-]{0,}[A-Za-z\s]{0,}[\.,'-]{0,}[A-Za-z\s]{0,}[\.,'-]{0,}[A-Za-z\s]{0,}[\.,'-]{0,}[A-Za-z\s]{0,}$/;
+  if (strRegex.test(value))
+    return true;
+}
+
+    // objectvalue Validation => not (undefined, boolean, number, empty, string, key length=0)
+//     const objectValue = (value) => {
+//   if (typeof value === "undefined" || value === null || typeof value === "boolean" || typeof value === "number") return false;
+//   if (typeof value === "string" && value.trim().length === 0) return false;
+//   if (typeof value === "object" && Object.keys(value).length === 0) return false;
+
+//   return true;
+// };
+
   
-      module.exports={isValid,isValidName,isvalidEmail,isvalidMobile,isValidPassword,pincodeValid,keyValid,priceRegex}
+      module.exports={isValid,isValidName,isvalidEmail,isvalidMobile,isValidPassword,pincodeValid,keyValid,priceRegex,strRegex}
