@@ -1,6 +1,6 @@
 const isValid = function (value) {
     if (typeof value === 'undefined' || value === null) return false
-    if (typeof value === 'string' && value.trim().length === 0) return false
+    if (typeof value === 'string'&&value ==='Number'&& value.trim().length === 0) return false
     return true
     }
   
@@ -36,5 +36,11 @@ const isValid = function (value) {
         if (Object.keys(value).length > 0) return true;
         return false;
       };
+
+      const priceRegex =function (value)  {
+        let price =/^\d+(,\d{1,2})?$/;
+        if(price.test(value)) return true;
+        return false;
+    };
   
-      module.exports={isValid,isValidName,isvalidEmail,isvalidMobile,isValidPassword,pincodeValid,keyValid}
+      module.exports={isValid,isValidName,isvalidEmail,isvalidMobile,isValidPassword,pincodeValid,keyValid,priceRegex}
