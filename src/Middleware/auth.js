@@ -18,16 +18,18 @@ const Authentication = async function (req, res, next) {
             return res.status(400).send({ status: false, message: 'You are not logged in, Please login to proceed your request,Add token' })
         }
         token = token.split(' ')
-        console.log(typeof token[1])
-        let decodedToken
-        try {
-            decodedToken = jwt.verify(token[1], "project5group62")
-            console.log(decodedToken)
-        } catch (error) {
-            return res.status(400).send({ status: false, msg: "INVALID TOKEN" })
-        }
-        req.userId = decodedToken.userId
-        next();
+        // console.log(token[1])
+    
+        
+         jwt.verify(token[1], "project5group62",function(error,decoded){
+            // console.log(decodedToken)
+            if(error) return res.status(400).send("this token is invalid")   
+            else{
+              decodedToken =decoded
+              next()
+            }
+        } )
+       
   
     } catch (error) {
         return res.status(500).send({ status: false, msg: error.message })
@@ -40,23 +42,28 @@ const Authentication = async function (req, res, next) {
   
   const Authorization = async (req, res, next) => {
       try {
-          let loggedInUser = req.params.userId;
-          let loginUser;
           
-          if(loggedInUser){
-             if(!isValidObjectId(req.params.userId)) 
+        
+          idFromToken = decodedToken.userId
+
+          let loggedInUser = req.params.userId;
+
+          
+             if(!isValidObjectId(loggedInUser)) 
                return res.status(400).send({ status: false, message: "Enter a valid user Id" });
-            let checkUserId = await userModel.findById(req.params.userId);
+            let checkUserId = await userModel.findById(loggedInUser);
             if(!checkUserId) 
               return res.status(404).send({ status: false, message: "User not found" });
-            
-            loginUser = checkUserId._id.toString();
-          }
-      
-          if(loggedInUser !== loginUser) 
-            return res.status(403).send({ status: false, message: "Error!! authorization failed" });
+            let loginUser ;
+            loginUser = checkUserId.id;
           
+        
+          if(idFromToken !== loginUser) {
+            return res.status(403).send({ status: false, message: "Error!! authorization failed" });
+          }else{
           next();
+          }
+          
         } catch (error) {
           return res.status(500).send({ status: false, error: error.message });
         }
