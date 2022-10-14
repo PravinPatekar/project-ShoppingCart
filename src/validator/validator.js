@@ -11,6 +11,11 @@
       
         return true;
       };
+
+      const isString = function (value) {
+        if (typeof value === "string" && value.trim().length === 0) return false;
+        return true;
+      }
   
      const isValidName =function (value){
         let name =/^[A-Z][a-z,.'-]+(?: [A-Z][a-z,.'-]+)*$/
@@ -68,4 +73,4 @@ const strRegex = (value) => {
 // };
 
   
-      module.exports={isValid,isValidName,isvalidEmail,isvalidMobile,isValidPassword,pincodeValid,keyValid,priceRegex,strRegex}
+      module.exports={isValid,isString,isValidName,isvalidEmail,isvalidMobile,isValidPassword,pincodeValid,keyValid,priceRegex,strRegex}

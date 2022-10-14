@@ -37,7 +37,7 @@ const createProduct = async (req, res) => {
         if (!priceRegex(price)) {
             return res.status(400).send({ status: false, message: "price is mandatory and in number only " })
         }
-        if (currencyId != "INR") {
+        if (currencyId = "INR") {
             return res.status(400).send({ status: false, message: "Only indian currency id allowed for example INR" })
         }
         //      if (!isValid(isFreeShipping)){
@@ -154,11 +154,142 @@ const getProductById = async (req, res) => {
 
 }
 
+const updateProduct = async function (req, res) {
+    try {
+        let productId = req.params.productId
+
+        let body = req.body
+
+        const files = req.files
+
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).send({ status: false, msg: "this  productId is not a valid Id" })
+        }
+
+        let product = await productModel.findById(productId)
+
+        if (!product) return res.status(404).send({ status: false, message: 'product not found' })
+
+        if (product.isDeleted == true) return res.status(400).send({ status: false, message: `Product is deleted` })
+
+        if (!isValid(files)) return res.status(400).send({ status: false, message: "Please Enter data to update the product" })
+
+         const data = {}
+        if (files) {
+          
+            if (files.length > 0) {
+                data.productImage = await imgUpload.uploadFile(files[0])
+            }
+        }
+
+        let { title, description, price, currencyId, currencyFormat, isFreeShipping, style, availableSizes, installments } = body
+
+        if (!isString(title)) return res.status(400).send({ status: false, message: "title can not be empty" })
+        if (title){
+          if (await productModel.findOne({ title:title })) return res.status(400).send({ status: false, message: `This title ${title} is already present please Give another Title` })
+          data.title = title
+        }
+           
+        if (!isString(description)) return res.status(400).send({ status: false, message: "description can not be empty" })
+            if (description) {
+            data.description = description
+            }
+
+            if (!isString(price)) return res.status(400).send({ status: false, message: "price can not be empty" })
+            if (price) {
+            if (! (/^[0-9]+$/).test(price)) return res.status(400).send({ status: false, message: "price should be in  valid Formate with Numbers || Decimals" })
+            
+            data.price = price
+            }
+
+            if (!isString(currencyId)) return res.status(400).send({ status: false, message: "currencyId can not be empty" })
+            if (currencyId) {
+            if (!/^INR$/.test(currencyId)) return res.status(400).send({ status: false, message: `currencyId Should be in this form 'INR' only` })
+          
+            data.currencyId = currencyId
+            }
+
+            if (!isString(currencyFormat)) return res.status(400).send({ status: false, message: "currencyFormat can not be empty" })
+            if (currencyFormat) {
+         if (!/^₹$/.test(currencyFormat)) return res.status(400).send({ status: false, message: `currencyFormat Should be in this form '₹' only` })
+            
+            data.currencyFormat = currencyFormat
+            }
+
+            if (!isString(isFreeShipping)) return res.status(400).send({ status: false, message: "isFreeShipping can not be empty" })
+        if (isFreeShipping) {
+            if (!/^(true|false)$/.test(isFreeShipping)) return res.status(400).send({ status: false, message: `isFreeShipping Should be in boolean with small letters` })
+          data.isFreeShipping = isFreeShipping
+        }
+        if (!isString(style)) return res.status(400).send({ status: false, message: "style can not be empty" })
+            if (style) {
+            data.style = style
+            }
+
+            if (!isString(availableSizes)) return res.status(400).send({ status: false, message: "availableSizes can not be empty" })
+            if (availableSizes) {
+            availableSizes = availableSizes.toUpperCase()
+            let size = availableSizes.split(',').map(x => x.trim())
+
+            for (let i = 0; i < size.length; i++) {
+                if (!(["S", "XS", "M", "X", "L", "XXL", "XL"].includes(size[i]))) return res.status(400).send({ status: false, message: `availableSizes should have only these Sizes ['S' || 'XS'  || 'M' || 'X' || 'L' || 'XXL' || 'XL']` })
+
+            }
+            data['$addToSet'] = {}
+            data['$addToSet']['availableSizes'] = size
+
+        }
+
+
+        if (!isString(installments)) return res.status(400).send({ status: false, message: "installments can not be empty" })
+        if (installments) {
+       
+       
+
+            if (!/^\d+$/.test(installments)) return res.status(400).send({ status: false, message: "installments should have only Number" })
+      
+            data.installments = installments
+        }
+
+        const newProduct = await productModel.findByIdAndUpdate(productId, data, { new: true })
+
+        return res.status(200).send({ status: true, message: "Success", data: newProduct })
+
+    } catch (error) {
+        return res.status(500).send({ error: error.message })
+    }
+}
+
+const deleteProductbyId = async function (req, res) {
+    try {
+        const Id = req.params.productId;
+
+        if (!mongoose.Types.ObjectId.isValid(Id)) {
+            return res.status(400).send({ status: false, msg: "this  productId is not a valid Id" })
+        }
+
+        const findProductbyId = await productModel.findOne({ _id: Id, isDeleted: false })
+        if (!findProductbyId) return res.status(404).send({ status: false, msg: "Product Not Found or Does Not Exist" })
+
+        // DB Call And Update => isDeleted as false
+        await productModel.findOneAndUpdate({ _id: Id, isDeleted: false },
+            { $set: { isDeleted: true, deletedAt: new Date() } }, { new: true });
+
+        // Sucessfull delete product return responce to body 
+        return res.status(200).send({ status: true, message: " Product has been deleted successfully" });
+
+    } catch (error) {
+        return res.status(500).send({ status: false, message: error.message });
+    }
+};
+  
+ 
 
 module.exports.createProduct = createProduct
 module.exports.getProducts = getProducts
 module.exports.getProductById=getProductById
-
+module.exports.updateProduct=updateProduct
+module.exports.deleteProductbyId=deleteProductbyId
 
 
 

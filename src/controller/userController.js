@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken")
 
 
 
-const { isValid,isValidName,isvalidEmail,isvalidMobile,isValidPassword, pincodeValid, keyValid } = require('../validator/validator')
+const { isValid, isValidName, isvalidEmail, isvalidMobile, isValidPassword, pincodeValid, keyValid, isString } = require('../validator/validator')
 
 
 ////////////////////////// CREATE USER API /////////////////////////
@@ -16,7 +16,7 @@ const createUser = async function (req, res) {
         const data = req.body
         const files = req.files
 
-        const { fname, lname, email, profileImage, phone, password, address } = data
+        const { fname, lname, email,  phone, password, address } = data
 
         if (!isValid(fname)) return res.status(400).send({ status: false, message: "fname is mandatory and should have non empty String" })
 
@@ -89,6 +89,7 @@ const createUser = async function (req, res) {
         } else {
             return res.status(400).send({ status: false, message: "Please provide address for billing" })
         }
+
         let profileImage1 = await imgUpload.uploadFile(files[0])
 
         const encyptPassword = await bcrypt.hash(password, 10)
@@ -160,7 +161,7 @@ const getUser = async function (req, res) {
     try {
         const userId = req.params.userId;
         //   const body = req.body;
-        
+
 
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).send({ status: false, msg: "this  UserId is not a valid Id" })
@@ -185,76 +186,59 @@ const getUser = async function (req, res) {
 };
 
 //////////////////////////////////////// PUT API////////////////////////////////////////
-updateUserProfile = async (req, res) => {
+const updateUserProfile = async (req, res) => {
     try {
         let UserId = req.params.userId
-
+        const files = req.files
+        
+    
         const { fname, lname, email, profileImage, phone, password, address } = req.body
+        
+         
 
-        if (Object.keys(req.body).length == 0)
-            return res.status(400).send({ status: false, msg: "Please Enter user Details For Updating" })
-        // if (!UserId) {
-        //     return res.status(400).send({ status: false, msg: "UserId must be present" })
-        // }
-
+        
         if (!mongoose.Types.ObjectId.isValid(UserId)) {
             return res.status(400).send({ status: false, msg: "this  UserId is not a valid Id" })
         }
 
-        
-        
         let findUserId = await userModel.findById(UserId)
         if (!findUserId) {
             return res.status(404).send({ status: false, msg: "no user found with this UserId" })
         }
-         if(fname){
-        if (!isValid(fname)) {
-                   return res.status(400).send({ status: false, msg: "Please enter a valid fname" }) }
-        if (!isValidName(fname)) {
-            return res.status(400).send({ status: false, message: "Please Provide fname in valid formate and Should Starts with Capital Letter" })
-        }
-     }
-         if(lname){
-        if (!isValid(lname)){
-             return res.status(400).send({ status: false, msg: "Please enter a valid lname" })}
-        if (!isValidName(lname)){
-            return res.status(400).send({ status: false, message: "Please Provide lname in valid formate and Should Starts with Capital Letter" })
-         }
-        }
-         if(email){
-        if (!isValid(email)){
-             return res.status(400).send({ status: false, msg: "Please enter a valid email" })}
-        if (!isvalidEmail(email)) {
-            return res.status(400).send({ status: false, msg: "Please Enter valid Email" })
-        }
-     }
 
-    //  if(profileImage){
-        //  if (!isValid(profileImage)){ return res.status(400).send({ status: false, msg: "Please enter a valid profileImage" })}
-        //  if (!keyValid(files)){
-        //  return res.status(400).send({ status: false, message: "profile Image is Mandatory" })}
 
-    //  }
-    //  let profileImage1 = await imgUpload.uploadFile(files[0])
+        if (!isString(fname)) return res.status(400).send({ status: false, message: "fname can not be empty" })
 
-        if(phone){
-        if (!isValid(phone)){
-               return res.status(400).send({ status: false, msg: "Please enter a valid phone" })}
-        if (!isvalidMobile(phone)) {
-            return res.status(400).send({ status: false, msg: "Please Enter valid phone Number" })
+        if (!isString(lname)) return res.status(400).send({ status: false, message: "lname can not be empty" })
+
+        if (!isString(email)) return res.status(400).send({ status: false, message: "email can not be empty" })
+        if (email) {
+            if (!isvalidEmail(email)) return res.status(400).send({ status: false, msg: "Please Enter valid Email" })
         }
-    }
-   
-
-        if(password){
-        if (!isValid(password)) {
-            return res.status(400).send({ status: false, msg: "Please enter a valid password" })}
-        if (!isValidPassword(password)) {
-            return res.status(400).send({ status: false, msg: "please Enter valid Password and it's length should be 8-15" })
+        if (!isString(profileImage)) return res.status(400).send({ status: false, message: "profileImage can not be empty" })
+        let uploadedFileURL;
+        
+        if(profileImage){
+        if (files && files.length > 0) {
+             uploadedFileURL = await imgUpload.uploadFile(files[0]);
+            
+          }
+         }            
+        if (!isString(phone)) return res.status(400).send({ status: false, message: "phone can not be empty" })
+        
+        if (phone) {
+            if (!isvalidMobile(phone)) return res.status(400).send({ status: false, msg: "Please Enter valid phone Number" })
         }
-    }
-        //  const encyptPassword = await bcrypt.hash(password, 10)
+        if (!isString(password)) return res.status(400).send({ status: false, message: "password can not be empty" })
+            let encyptPassword;
 
+        if (password) {
+            if (!isValidPassword(password)) return res.status(400).send({ status: false, msg: "please Enter valid Password and it's length should be 8-15" })
+             encyptPassword = await bcrypt.hash(password, 10)
+
+        }
+        
+    
         let existEmail = await userModel.findOne({ email: email })
         if (existEmail) {
             return res.status(400).send({ status: false, msg: "User with this email is already registered" })
@@ -264,67 +248,68 @@ updateUserProfile = async (req, res) => {
         if (existphone) {
             return res.status(400).send({ status: false, msg: "User with this phone number is already registered" })
         }
-
-        // const addressParse = JSON.parse(address)
+  
+        let addressParse ;
 
         if (address) {
-            const addressParse = JSON.parse(address)
-            console.log(address)
+             addressParse = JSON.parse(address)
+            // console.log(address)
 
             if (addressParse.shipping) {
                 if (!keyValid(addressParse.shipping)) return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
 
                 if (!isValid(addressParse.shipping.street)) return res.status(400).send({ status: false, message: "Street is mandatory and should have non empty String in Shipping" })
-                
+
                 if (!isValid(addressParse.shipping.city)) return res.status(400).send({ status: false, message: "city is mandatory and should have non empty String in Shipping" })
-            
+
                 if (!isValid(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in Shipping" })
-                
+
                 if (!pincodeValid(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with  6 number in Shipping" })
-             }else {
+            } else {
                 return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
             }
-        
+
 
             if (addressParse.billing) {
                 if (!keyValid(addressParse.billing)) return res.status(400).send({ status: false, message: "Please provide address for billing" })
 
                 if (!isValid(addressParse.billing.street)) return res.status(400).send({ status: false, message: "Street is mandatory and should have non empty String in billing" })
-                
+
                 if (!isValid(addressParse.billing.city)) return res.status(400).send({ status: false, message: "city is mandatory and should have non empty String in billing" })
-                
+
                 if (!isValid(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in billing" })
-                
+
                 if (!pincodeValid(addressParse.billing.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with  6 number in billing" })
 
 
-            }else {
+            } else {
                 return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
             }
 
         }
-    
 
         let updatedUser = await userModel.findOneAndUpdate({ _id: UserId }, {
+
             $set: {
-                fname:fname,
-                lname:lname,
-                email:email,
-                profileImage:profileImage,
-                phone:phone,
-                password:password,
-                address:address
+
+                fname: fname,
+                lname: lname,
+                email: email,
+                profileImage: uploadedFileURL,
+                phone: phone,
+                password: encyptPassword,
+                address: addressParse
             }
 
         }, { new: true })
         return res.status(200).send({ status: true, message: "user data", data: updatedUser })
-
+    
 
     } catch (err) {
         return res.status(500).send({ status: false, msg: err.message });
     }
-
 }
+
 
 
 module.exports.createUser = createUser;

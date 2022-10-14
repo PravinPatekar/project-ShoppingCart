@@ -12,6 +12,7 @@ router.put("/user/:userId/profile",middleware.Authentication,middleware.Authoriz
 router.post("/products",ProductContoller.createProduct)
 router.get("/products",ProductContoller.getProducts)
 router.get("/products/:productId",ProductContoller.getProductById)
-
+router.post("/products/:productId",ProductContoller.updateProduct)
+router.delete("/products/:productId",ProductContoller.deleteProductbyId)
 
 module.exports = router;
