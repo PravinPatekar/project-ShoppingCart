@@ -6,7 +6,7 @@ const middleware = require("../Middleware/auth")
 
 router.post("/register",userController.createUser)
 router.post("/login",userController.loginUser)
-router.get("/user/:userId/profile",middleware.Authentication,userController.getUser)
+router.get("/user/:userId/profile",middleware.Authentication,middleware.Authorization,userController.getUser)
 router.put("/user/:userId/profile",middleware.Authentication,middleware.Authorization,userController.updateUserProfile)
 //=====================productApi======================================//
 router.post("/products",ProductContoller.createProduct)

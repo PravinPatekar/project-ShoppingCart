@@ -12,7 +12,7 @@ const createProduct = async (req, res) => {
         const files = req.files
 
         if (Object.keys(product).length == 0) {
-            return res.status(400).send({ status: false, message: "for registration user data is required", });
+            return res.status(400).send({ status: false, message: "for registration product data is required", });
         }
 
         let { productImage, title, description, price, currencyId, isFreeShipping, style, availableSizes, installments } = product

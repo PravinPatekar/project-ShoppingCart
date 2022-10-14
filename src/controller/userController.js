@@ -195,7 +195,9 @@ const updateUserProfile = async (req, res) => {
         const { fname, lname, email, profileImage, phone, password, address } = req.body
         
          
-
+        if (Object.keys(req.body).length == 0) {
+            return res.status(400).send({ status: false, message: "for updation user data is required", });
+        }
         
         if (!mongoose.Types.ObjectId.isValid(UserId)) {
             return res.status(400).send({ status: false, msg: "this  UserId is not a valid Id" })
