@@ -1,9 +1,4 @@
-// const isValid =  (value) =>{
-//     if (typeof value === 'undefined' || value === null|| typeof value === "boolean" || typeof value === "number") return false
-//     if (typeof value === 'string'&& value.trim().length === 0) return false
-//     if (typeof value === "object" && Object.keys(value).length === 0) return false;
-//     return true
-//     }
+
          const isValid = (value) => {
         if (typeof value === "undefined" || value === null || typeof value === "boolean" || typeof value === "number") return false;
         if (typeof value === "string" && value.trim().length === 0) return false;
@@ -63,14 +58,6 @@ const strRegex = (value) => {
     return true;
 }
 
-    // objectvalue Validation => not (undefined, boolean, number, empty, string, key length=0)
-//     const objectValue = (value) => {
-//   if (typeof value === "undefined" || value === null || typeof value === "boolean" || typeof value === "number") return false;
-//   if (typeof value === "string" && value.trim().length === 0) return false;
-//   if (typeof value === "object" && Object.keys(value).length === 0) return false;
-
-//   return true;
-// };
 
   
       module.exports={isValid,isString,isValidName,isvalidEmail,isvalidMobile,isValidPassword,pincodeValid,keyValid,priceRegex,strRegex}

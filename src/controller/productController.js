@@ -197,7 +197,7 @@ const updateProduct = async function (req, res) {
 
             if (!isString(price)) return res.status(400).send({ status: false, message: "price can not be empty" })
             if (price) {
-            if (! (/^[0-9]+$/).test(price)) return res.status(400).send({ status: false, message: "price should be in  valid Formate with Numbers || Decimals" })
+            if (! priceRegex(price)) return res.status(400).send({ status: false, message: "price should be in  valid Formate with Numbers || Decimals" })
             
             data.price = price
             }
@@ -246,7 +246,7 @@ const updateProduct = async function (req, res) {
        
        
 
-            if (!/^\d+$/.test(installments)) return res.status(400).send({ status: false, message: "installments should have only Number" })
+            if (!priceRegex(installments)) return res.status(400).send({ status: false, message: "installments should have only Number" })
       
             data.installments = installments
         }

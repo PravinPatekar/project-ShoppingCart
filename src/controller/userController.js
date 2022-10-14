@@ -92,8 +92,8 @@ const createUser = async function (req, res) {
 
         let profileImage1 = await imgUpload.uploadFile(files[0])
 
-        const encyptPassword = await bcrypt.hash(password, 10)
-
+        const salt = await bcrypt.genSalt(10)
+        const encyptPassword = await bcrypt.hash(password, salt)
 
         let obj = {
             fname, lname, email, phone, profileImage: profileImage1, password: encyptPassword, address: addressParse
@@ -234,8 +234,8 @@ const updateUserProfile = async (req, res) => {
 
         if (password) {
             if (!isValidPassword(password)) return res.status(400).send({ status: false, msg: "please Enter valid Password and it's length should be 8-15" })
-             encyptPassword = await bcrypt.hash(password, 10)
-
+             const salt = await bcrypt.genSalt(10)
+             encyptPassword = await bcrypt.hash(password, salt)
         }
         
     
