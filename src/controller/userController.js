@@ -16,7 +16,7 @@ const createUser = async function (req, res) {
         const data = req.body
         const files = req.files
 
-        const { fname, lname, email,  phone, password, address } = data
+        const { fname, lname, email, phone, password, address } = data
 
         if (!isValid(fname)) return res.status(400).send({ status: false, message: "fname is mandatory and should have non empty String" })
 
@@ -70,7 +70,7 @@ const createUser = async function (req, res) {
 
             if (!isValid(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "pincode is mandatory and should have non empty String in Shipping" })
 
-            if (!pincodeValid(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "Please provide valid Pincode with  6 number in Shipping" })
+            if (!pincodeValid(addressParse.shipping.pincode)) return res.status(400).send({ status: false, message: "Please provide valid 6 Digit Pincode in Shipping" })
         } else {
             return res.status(400).send({ status: false, message: "Please provide address for Shipping" })
         }
@@ -90,10 +90,10 @@ const createUser = async function (req, res) {
             return res.status(400).send({ status: false, message: "Please provide address for billing" })
         }
 
-        let profileImage1 = await imgUpload.uploadFile(files[0])
+        let profileImage1 = await imgUpload.uploadFile(files[0])   // AWS
 
-        const salt = await bcrypt.genSalt(10)
-        const encyptPassword = await bcrypt.hash(password, salt)
+        const salt = await bcrypt.genSalt(10)                         
+        const encyptPassword = await bcrypt.hash(password, salt) // Bcrypt
 
         let obj = {
             fname, lname, email, phone, profileImage: profileImage1, password: encyptPassword, address: addressParse
@@ -114,7 +114,8 @@ const loginUser =
     async function (req, res) {
         try {
             let data = req.body
-            const { email, password } = data
+            const { email, password } = data  
+            
             //=====================Checking the validation=====================//
             if (!keyValid(data)) return res.status(400).send({ status: false, msg: "Email and Password Required !" })
 
@@ -153,8 +154,6 @@ const loginUser =
         }
     }
 
-
-
 ////////////////////////////////////////////Get API//////////////////////////////////////
 
 const getUser = async function (req, res) {
@@ -190,15 +189,15 @@ const updateUserProfile = async (req, res) => {
     try {
         let UserId = req.params.userId
         const files = req.files
-        
-    
+
+
         const { fname, lname, email, profileImage, phone, password, address } = req.body
-        
-         
+
+
         if (Object.keys(req.body).length == 0) {
             return res.status(400).send({ status: false, message: "for updation user data is required", });
         }
-        
+
         if (!mongoose.Types.ObjectId.isValid(UserId)) {
             return res.status(400).send({ status: false, msg: "this  UserId is not a valid Id" })
         }
@@ -219,28 +218,28 @@ const updateUserProfile = async (req, res) => {
         }
         if (!isString(profileImage)) return res.status(400).send({ status: false, message: "profileImage can not be empty" })
         let uploadedFileURL;
-        
-        if(profileImage){
-        if (files && files.length > 0) {
-             uploadedFileURL = await imgUpload.uploadFile(files[0]);
-            
-          }
-         }            
+
+        if (profileImage) {
+            if (files && files.length > 0) {
+                uploadedFileURL = await imgUpload.uploadFile(files[0]);
+
+            }
+        }
         if (!isString(phone)) return res.status(400).send({ status: false, message: "phone can not be empty" })
-        
+
         if (phone) {
             if (!isvalidMobile(phone)) return res.status(400).send({ status: false, msg: "Please Enter valid phone Number" })
         }
         if (!isString(password)) return res.status(400).send({ status: false, message: "password can not be empty" })
-            let encyptPassword;
+        let encyptPassword;
 
         if (password) {
             if (!isValidPassword(password)) return res.status(400).send({ status: false, msg: "please Enter valid Password and it's length should be 8-15" })
-             const salt = await bcrypt.genSalt(10)
-             encyptPassword = await bcrypt.hash(password, salt)
+            const salt = await bcrypt.genSalt(10)
+            encyptPassword = await bcrypt.hash(password, salt)
         }
-        
-    
+
+
         let existEmail = await userModel.findOne({ email: email })
         if (existEmail) {
             return res.status(400).send({ status: false, msg: "User with this email is already registered" })
@@ -250,11 +249,11 @@ const updateUserProfile = async (req, res) => {
         if (existphone) {
             return res.status(400).send({ status: false, msg: "User with this phone number is already registered" })
         }
-  
-        let addressParse ;
+
+        let addressParse;
 
         if (address) {
-             addressParse = JSON.parse(address)
+            addressParse = JSON.parse(address)
             // console.log(address)
 
             if (addressParse.shipping) {
@@ -305,7 +304,7 @@ const updateUserProfile = async (req, res) => {
 
         }, { new: true })
         return res.status(200).send({ status: true, message: "user data", data: updatedUser })
-    
+
 
     } catch (err) {
         return res.status(500).send({ status: false, msg: err.message });

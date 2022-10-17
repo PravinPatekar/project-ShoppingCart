@@ -3,7 +3,7 @@ const imgUpload = require('../AWS/aws')
 const mongoose = require('mongoose')
 
 
-const { isValid, priceRegex,strRegex } = require('../validator/validator')
+const { isValid, priceRegex, strRegex,isString } = require('../validator/validator')
 
 
 const createProduct = async (req, res) => {
@@ -37,7 +37,8 @@ const createProduct = async (req, res) => {
         if (!priceRegex(price)) {
             return res.status(400).send({ status: false, message: "price is mandatory and in number only " })
         }
-        if (currencyId = "INR") {
+
+        if (!(currencyId === "INR")) {
             return res.status(400).send({ status: false, message: "Only indian currency id allowed for example INR" })
         }
         //      if (!isValid(isFreeShipping)){
@@ -106,14 +107,11 @@ const getProducts = async (req, res) => {
             filter.price = { $gte: priceGreaterThan, $lte: priceLessThan }
         }
 
-        if (isValid(priceSort)) {
-            if (!(priceSort == 1 || priceSort == -1)) {
-                return res.status(400).send({ status: false, msg: "we can only sort price by value 1 or -1!" })
-            }
+        if (priceSort) {
+            if (typeof priceSort === "") return res.status(400).send({ status: false, msg: "PriceSort Cant be Empty" })
+            if (!(priceSort == 1 || priceSort == -1)) return res.status(400).send({ status: false, msg: "we can only sort price by value 1 or -1!" })
         }
-        else {
-            return res.status(400).send({ status: false, msg: "enter valid priceSort of 1 or -1 to filter products!" })
-        }
+
 
         //DB call => select product from DB by price filter sort the product min price to max price
         const productList = await productModel.find(filter).sort({ price: priceSort })
@@ -140,7 +138,7 @@ const getProductById = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).send({ status: false, msg: "this  productId is not a valid Id" })
         }
-        let findProduct = await productModel.findById({  _id: productId,isDeleted: false})
+        let findProduct = await productModel.findById({ _id: productId, isDeleted: false })
         // console.log(findProduct)5
         if (!findProduct) {
             return res.status(404).send({ status: false, msg: "No product found with this productId" })
@@ -172,11 +170,11 @@ const updateProduct = async function (req, res) {
 
         if (product.isDeleted == true) return res.status(400).send({ status: false, message: `Product is deleted` })
 
-        if (!isValid(files)) return res.status(400).send({ status: false, message: "Please Enter data to update the product" })
+        if (!isString(files)) return res.status(400).send({ status: false, message: "Please Enter data to update the product" })
 
-         const data = {}
+        const data = {}
         if (files) {
-          
+
             if (files.length > 0) {
                 data.productImage = await imgUpload.uploadFile(files[0])
             }
@@ -184,50 +182,52 @@ const updateProduct = async function (req, res) {
 
         let { title, description, price, currencyId, currencyFormat, isFreeShipping, style, availableSizes, installments } = body
 
-        if (!isString(title)) return res.status(400).send({ status: false, message: "title can not be empty" })
-        if (title){
-          if (await productModel.findOne({ title:title })) return res.status(400).send({ status: false, message: `This title ${title} is already present please Give another Title` })
-          data.title = title
+
+        if (title) {
+            if (!isValid(title)) return res.status(400).send({ status: false, message: "title can not be empty" })
+            if (await productModel.findOne({ title: title })) return res.status(400).send({ status: false, message: `This title ${title} is already present please Give another Title` })
+            data.title = title
         }
-           
-        if (!isString(description)) return res.status(400).send({ status: false, message: "description can not be empty" })
-            if (description) {
+
+        if (!isValid(description)) return res.status(400).send({ status: false, message: "description can not be empty" })
+        if (description) {
             data.description = description
-            }
-
-            if (!isString(price)) return res.status(400).send({ status: false, message: "price can not be empty" })
-            if (price) {
-            if (! priceRegex(price)) return res.status(400).send({ status: false, message: "price should be in  valid Formate with Numbers || Decimals" })
-            
-            data.price = price
-            }
-
-            if (!isString(currencyId)) return res.status(400).send({ status: false, message: "currencyId can not be empty" })
-            if (currencyId) {
-            if (!/^INR$/.test(currencyId)) return res.status(400).send({ status: false, message: `currencyId Should be in this form 'INR' only` })
-          
-            data.currencyId = currencyId
-            }
-
-            if (!isString(currencyFormat)) return res.status(400).send({ status: false, message: "currencyFormat can not be empty" })
-            if (currencyFormat) {
-         if (!/^₹$/.test(currencyFormat)) return res.status(400).send({ status: false, message: `currencyFormat Should be in this form '₹' only` })
-            
-            data.currencyFormat = currencyFormat
-            }
-
-            if (!isString(isFreeShipping)) return res.status(400).send({ status: false, message: "isFreeShipping can not be empty" })
-        if (isFreeShipping) {
-            if (!/^(true|false)$/.test(isFreeShipping)) return res.status(400).send({ status: false, message: `isFreeShipping Should be in boolean with small letters` })
-          data.isFreeShipping = isFreeShipping
         }
-        if (!isString(style)) return res.status(400).send({ status: false, message: "style can not be empty" })
-            if (style) {
-            data.style = style
-            }
 
-            if (!isString(availableSizes)) return res.status(400).send({ status: false, message: "availableSizes can not be empty" })
-            if (availableSizes) {
+        if (!isValid(price)) return res.status(400).send({ status: false, message: "price can not be empty" })
+        if (price) {
+            if (!priceRegex(price)) return res.status(400).send({ status: false, message: "price should be in  valid Formate with Numbers || Decimals" })
+
+            data.price = price
+        }
+
+
+        if (currencyId) {
+            if (!isValid(currencyId)) return res.status(400).send({ status: false, message: "currencyId can not be empty" })
+            if (!/^INR$/.test(currencyId)) return res.status(400).send({ status: false, message: `currencyId Should be in this form 'INR' only` })
+
+            data.currencyId = currencyId
+        }
+
+        if (currencyFormat) {
+            if (!isValid(currencyFormat)) return res.status(400).send({ status: false, message: "currencyFormat can not be empty" })
+            if (!/^₹$/.test(currencyFormat)) return res.status(400).send({ status: false, message: `currencyFormat Should be in this form '₹' only` })
+
+            data.currencyFormat = currencyFormat
+        }
+
+        if (isFreeShipping) {
+            if (!isValid(isFreeShipping)) return res.status(400).send({ status: false, message: "isFreeShipping can not be empty" })
+            if (!/^(true|false)$/.test(isFreeShipping)) return res.status(400).send({ status: false, message: `isFreeShipping Should be in boolean with small letters` })
+            data.isFreeShipping = isFreeShipping
+        }
+        if (style) {
+            if (!isValid(style)) return res.status(400).send({ status: false, message: "style can not be empty" })
+            data.style = style
+        }
+
+        if (availableSizes) {
+            if (!isValid(availableSizes)) return res.status(400).send({ status: false, message: "availableSizes can not be empty" })
             availableSizes = availableSizes.toUpperCase()
             let size = availableSizes.split(',').map(x => x.trim())
 
@@ -241,13 +241,11 @@ const updateProduct = async function (req, res) {
         }
 
 
-        if (!isString(installments)) return res.status(400).send({ status: false, message: "installments can not be empty" })
         if (installments) {
-       
-       
+            if (!isValid(installments)) return res.status(400).send({ status: false, message: "installments can not be empty" })
 
             if (!priceRegex(installments)) return res.status(400).send({ status: false, message: "installments should have only Number" })
-      
+
             data.installments = installments
         }
 
@@ -282,14 +280,14 @@ const deleteProductbyId = async function (req, res) {
         return res.status(500).send({ status: false, message: error.message });
     }
 };
-  
- 
+
+
 
 module.exports.createProduct = createProduct
 module.exports.getProducts = getProducts
-module.exports.getProductById=getProductById
-module.exports.updateProduct=updateProduct
-module.exports.deleteProductbyId=deleteProductbyId
+module.exports.getProductById = getProductById
+module.exports.updateProduct = updateProduct
+module.exports.deleteProductbyId = deleteProductbyId
 
 
 

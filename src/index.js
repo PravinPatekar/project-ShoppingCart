@@ -11,6 +11,7 @@ app.use(multer().any());
 
 mongoose.connect("mongodb+srv://Madhurilenka:Madhuri1998@cluster0.zcysdvm.mongodb.net/group62Database", {
     useNewUrlParser: true
+
 })
     .then(() => console.log("MongoDb is connected"))
     .catch(err => console.log(err))
@@ -22,7 +23,7 @@ app.use('/', route);
 route.all("/*", function (req, res) {
     res.status(400).send({
         status: false,
-        msg: "The api you request is not available!"
+        msg: "URL NOT FOUND!"
     })
 })
 
