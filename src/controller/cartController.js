@@ -85,10 +85,10 @@ const createCart = async function (req, res) {
         totalPrice: findProduct.price * quantity,
         totalItems: 1,
       };
-      
+
       //Create cart for the user and store in DB
       const createCart = await cartModel.create(cartData);
-      
+
       //successfull creation of a new cart for user response
       return res.status(201).send({ status: true, message: `Cart created successfully`, data: createCart });
     }
@@ -135,6 +135,32 @@ const createCart = async function (req, res) {
   }
 };
 
+
+ const getCartById = async (req, res) => {
+  try {
+    let userId = req.params.userId
+    if (!isValidObjectId(userId)) {
+      return res.status(400).send({ status: false, message: "Please provide a valid userId." })
+    }
+    let user = await userModel.findById(userId)
+    if (!user) {
+      return res.status(400).send({ status: false, message: "this user doesnot exists" })
+    }
+    let cart = await cartModel.findOne({ "userId": userId })
+    if (!cart) {
+      return res.status(400).send({ status: false, message: "this user doesnot have any cart exists" })
+    }
+    // console.log(cart)
+    let productId = cart.items[0].productId.toString()
+    let product = await productModel.findById(productId)
+    let cartData = { cart: cart, product: product }
+       return res.status(200).send({ status: true, message: "Success", data: cartData })
+
+  } catch (error) {
+    return res.status(500).send({ status: false, message: error.message })
+  }
+}
+
 // Destructuring & Exporting
-module.exports = { createCart }
+module.exports = { createCart, getCartById}
 
