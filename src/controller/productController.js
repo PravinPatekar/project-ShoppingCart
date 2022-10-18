@@ -3,7 +3,7 @@ const imgUpload = require('../AWS/aws')
 const mongoose = require('mongoose')
 
 
-const { isValid, priceRegex, strRegex,isString } = require('../validator/validator')
+const { isValid, priceRegex, strRegex,isString,isValidObjectId } = require('../validator/validator')
 
 
 const createProduct = async (req, res) => {
