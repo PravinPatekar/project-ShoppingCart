@@ -24,9 +24,9 @@ router.delete("/products/:productId", ProductContoller.deleteProductbyId)
 //=====================CartApi======================================//
 
 router.post("/users/:userId/cart", RouteContoller.createCart)   //  middleware.Authentication, middleware.Authorization,
-
-
+router.put("/users/:userId/cart", RouteContoller.cartUpdate)
 router.get("/users/:userId/cart", RouteContoller.getCartById)
+router.delete("/users/:userId/cart", RouteContoller.deleteUser)
 
  
 

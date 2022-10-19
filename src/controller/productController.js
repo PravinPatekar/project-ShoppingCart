@@ -260,17 +260,17 @@ const updateProduct = async function (req, res) {
 
 const deleteProductbyId = async function (req, res) {
     try {
-        const Id = req.params.productId;
+        const productId = req.params.productId;
 
-        if (!mongoose.Types.ObjectId.isValid(Id)) {
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
             return res.status(400).send({ status: false, msg: "this  productId is not a valid Id" })
         }
 
-        const findProductbyId = await productModel.findOne({ _id: Id, isDeleted: false })
+        const findProductbyId = await productModel.findOne({ _id: productId, isDeleted: false })
         if (!findProductbyId) return res.status(404).send({ status: false, msg: "Product Not Found or Does Not Exist" })
 
         // DB Call And Update => isDeleted as false
-        await productModel.findOneAndUpdate({ _id: Id, isDeleted: false },
+        await productModel.findOneAndUpdate({ _id: productId, isDeleted: false },
             { $set: { isDeleted: true, deletedAt: new Date() } }, { new: true });
 
         // Sucessfull delete product return responce to body 
