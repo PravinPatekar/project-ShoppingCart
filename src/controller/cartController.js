@@ -152,7 +152,7 @@ const cartUpdate = async function (req, res) {
     if (!productDetails)
       return res.status(400).send({ status: false, message: "No product Exist with provided productId or might be deleted" })
 
-    let productCart = await cartModel.findOne({ items: { $elemMatch: { productId: { $eq: productId } } } })
+    let productCart = await cartModel.findOne({ items: { $in: { productId: { $eq: productId } } } })
 
     if (!productCart) return res.status(400).send({ status: false, message: `No product Exist in cart with given productId ${productId}` })
 
@@ -177,7 +177,7 @@ const cartUpdate = async function (req, res) {
 
       let deletedItem = await cartModel.findOneAndUpdate({ _id: cartId }, { $set: { totalPrice: sumTotal, totalItems: sumItems } }, { new: true })
 
-      return res.status(200).send({ status: true, message: "Successfully removed the prodect", data: deletedItem })
+      return res.status(200).send({ status: true, message: "Successfully removed the product", data: deletedItem })
     }
 
     let sumTotal1 = cartDetails.totalPrice - productDetails.price

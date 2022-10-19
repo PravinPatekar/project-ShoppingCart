@@ -20,6 +20,13 @@ const isString = function (value) {
   return true;
 }
 
+//object keys validation => must be more than 0 
+
+const keyValue = (value) => {
+  if (Object.keys(value).length === 0) return false;
+  return true;
+};
+
 const isValidName = function (value) {
   let name = /^[A-Z][a-z,.'-]+(?: [A-Z][a-z,.'-]+)*$/
   if (name.test(value)) return true;
@@ -68,4 +75,4 @@ const strRegex = (value) => {
 
 
 
-module.exports = { isValid, isString,isValidObjectId, isValidName, isvalidEmail, isvalidMobile, isValidPassword, pincodeValid, keyValid, priceRegex, strRegex }
+module.exports = { isValid,keyValue, isString,isValidObjectId, isValidName, isvalidEmail, isvalidMobile, isValidPassword, pincodeValid, keyValid, priceRegex, strRegex }
