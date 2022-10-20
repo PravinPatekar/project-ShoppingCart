@@ -1,10 +1,14 @@
 const cartModel = require("../model/cartModel")
-
+const userModel = require("../model/userModel")
 const orderModel = require("../model/orderModel")
 
 const { keyValue, isValidObjectId, isValid } = require("../validator/validator");  // IMPORTING VALIDATORS
 
-
+const isValidstatus=(value)=>{
+    const statuses=["pending", "completed", "cancled"]
+    if(statuses.includes(value)) return true
+    return false
+}
 
 /////////////////////////////// CREATE ORDER API ///////////////////////////////////
 
@@ -39,7 +43,7 @@ const createOrder = async function (req, res) {
         for (let i = 0; i < items.length; i++) {
             totalQuantity += items[i].quantity
         }
-        
+
         // cancellable validation => if key is present value must not be empty
         if (cancellable) {
 
@@ -73,4 +77,53 @@ const createOrder = async function (req, res) {
 };
 
 
-module.exports = { createOrder }
+const updateOrder = async function (req, res) {
+    try {
+        //-----------------------------user validation-----------------------------------------//
+        const userId = req.params.userId
+        if (!userId || !isValidObjectId(userId)) {
+            return res.status(400).send({ status: false, message: "Please provide a valid userId." })
+        }
+        const checkUser = await userModel.findById(userId)
+        if (checkUser == null) {
+            return res.status(404).send({ status: false, message: "user not found or it may be deleted" })
+        }
+        //-----------------------------------------------------------------------------------------//
+        const { orderId, status } = req.body
+
+        if (!status || !isValidstatus(status)) {
+            return res.status(400).send({ status: false, message: "Please Provide value for status[pending,completed or cancled]" })
+        }
+        //----------------------------------------order validation---------------------------//
+        if (!orderId || !isValidObjectId(orderId)) {
+            return res.status(400).send({ status: false, message: "Please provide a valid orderId." })
+        }
+        const checkOrder = await orderModel.findById(orderId)
+        if (checkOrder == null || checkOrder.isDeleted == true) {
+            return res.status(404).send({ status: false, message: "order not found or it may be deleted" })
+        }
+        //-----------------------------------checking cancellable order or not ------------------------------------------------------//
+        if (checkOrder.cancellable == false && (status == 'cancled')) {
+            return res.status(400).send({ status: false, message: "This order cannot cancled or already cancled" })
+        }
+
+        if (checkOrder.status == "completed") {
+            return res.status(400).send({ status: false, message: "This order was completed" })
+        }
+        //---------------------------updating status--------------------------------------------------------------//
+
+        const updateOrderStatus = await orderModel.findByIdAndUpdate(
+            { _id: orderId },
+            { $set: { "status": status } },
+            { new: true }
+        )
+
+        return res.status(200).send({ status: true, message: "updated", data: updateOrderStatus })
+    }
+    catch (err) {
+        return res.status(500).send({ status: false, error: err.message })
+    }
+}
+
+
+module.exports = { createOrder,updateOrder }

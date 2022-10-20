@@ -31,7 +31,7 @@ router.delete("/users/:userId/cart", RouteContoller.deleteUser)
 
 //******************* ORDERS APIs ***************************// 
 router.post("/users/:userId/orders", orderController.createOrder)  //  middleware.Authentication, middleware.Authorization,
-
+router.put("/users/:userId/orders",orderController.updateOrder)
 
 
 
