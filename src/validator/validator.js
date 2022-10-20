@@ -9,6 +9,12 @@ const isValid = (value) => {
   return true;
 };
 
+const isValidstatus=(value)=>{
+  const statuses=["pending", "completed", "cancled"]
+  if(statuses.includes(value)) return true
+  return false
+}
+
 //objectId validation
 
 const isValidObjectId = (objectId) => {
@@ -75,4 +81,4 @@ const strRegex = (value) => {
 
 
 
-module.exports = { isValid,keyValue, isString,isValidObjectId, isValidName, isvalidEmail, isvalidMobile, isValidPassword, pincodeValid, keyValid, priceRegex, strRegex }
+module.exports = { isValid,keyValue,isValidstatus,isString,isValidObjectId, isValidName, isvalidEmail, isvalidMobile, isValidPassword, pincodeValid, keyValid, priceRegex, strRegex }

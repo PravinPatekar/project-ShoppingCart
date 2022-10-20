@@ -1,22 +1,24 @@
-const cartModel = require("../model/cartModel")
-const userModel = require("../model/userModel")
+const cartModel = require("../model/cartModel");
+const userModel = require("../model/userModel");
 const orderModel = require("../model/orderModel")
 
-const { keyValue, isValidObjectId, isValid } = require("../validator/validator");  // IMPORTING VALIDATORS
 
-const isValidstatus=(value)=>{
-    const statuses=["pending", "completed", "cancled"]
-    if(statuses.includes(value)) return true
-    return false
-}
+const { keyValue, isValidObjectId, isValid, isValidstatus } = require("../validator/validator");  // IMPORTING VALIDATORS
+
 
 /////////////////////////////// CREATE ORDER API ///////////////////////////////////
 
 
 const createOrder = async function (req, res) {
     try {
+
         //request userId from path params
         const { userId } = req.params
+
+        // Checking dublicate order 
+        // const dublicateOrder = await cartModel.findById({ userId: userId });
+        // if(dublicateOrder)  return res.status(400).send({ status: false, message: "Order is Already Created" });
+
         //userId must be a valid objectId
         if (!isValidObjectId(userId)) return res.status(400).send({ status: false, message: "Please provide valid User Id!" });
 
@@ -48,16 +50,14 @@ const createOrder = async function (req, res) {
         if (cancellable) {
 
             //cancellable must be true or false
-            if (cancellable !== true || false) {
+            if (typeof cancellable !== "boolean") {
                 return res.status(400).send({ status: false, message: "Cancellable can be either true or false!" });
             }
         }
 
         // status validation => if key is present value must not be empty
         if (status) {
-
-            let statuss = ["pending", "completed", "cancelled"]
-            if (!statuss.includes(status)) return res.status(400).send({ status: false, message: `status should be among  ${status} or space is not allowed` })
+            if (!isValidstatus(status)) return res.status(400).send({ status: false, message: "status should be on of 'pending','completed','cancelled' " })
 
         }
 
@@ -67,15 +67,14 @@ const createOrder = async function (req, res) {
         //Create order for the user and store in DB
         let orderCreation = await orderModel.create(order)
         //update cart on successfully complition of order and set cart as empty
-        await cartModel.findOneAndUpdate({ userId: userId, isDeleted: false }, { $set: { items: [], totalPrice: 0, totalItems: 0 } })
+        await Success.findOneAndUpdate({ userId: userId, isDeleted: false }, { $set: { items: [], totalPrice: 0, totalItems: 0 } })
         //Successfull oreder details return response to body
-        return res.status(201).send({ status: true, message: `Order created successfully`, data: orderCreation });
+        return res.status(201).send({ status: true, message: `Success`, data: orderCreation });
     }
     catch (error) {
         res.status(500).send({ status: false, data: error.message });
     }
 };
-
 
 const updateOrder = async function (req, res) {
     try {
@@ -118,7 +117,7 @@ const updateOrder = async function (req, res) {
             { new: true }
         )
 
-        return res.status(200).send({ status: true, message: "updated", data: updateOrderStatus })
+        return res.status(200).send({ status: true, message: "Success", data: updateOrderStatus })
     }
     catch (err) {
         return res.status(500).send({ status: false, error: err.message })

@@ -24,16 +24,16 @@ router.delete("/products/:productId", ProductContoller.deleteProductbyId)
 
 //=====================CartApi======================================//
 
-router.post("/users/:userId/cart", RouteContoller.createCart)   //  middleware.Authentication, middleware.Authorization,
-router.put("/users/:userId/cart", RouteContoller.cartUpdate)
-router.get("/users/:userId/cart", RouteContoller.getCartById)
-router.delete("/users/:userId/cart", RouteContoller.deleteUser)
+router.post("/users/:userId/cart", middleware.Authentication, middleware.Authorization, RouteContoller.createCart)
+router.put("/users/:userId/cart", middleware.Authentication, middleware.Authorization, RouteContoller.cartUpdate)
+router.get("/users/:userId/cart", middleware.Authentication, middleware.Authorization, RouteContoller.getCartById)
+router.delete("/users/:userId/cart", middleware.Authentication, middleware.Authorization, RouteContoller.deleteCart)
 
 //******************* ORDERS APIs ***************************// 
-router.post("/users/:userId/orders", orderController.createOrder)  //  middleware.Authentication, middleware.Authorization,
-router.put("/users/:userId/orders",orderController.updateOrder)
+
+router.post("/users/:userId/orders", middleware.Authentication, middleware.Authorization, orderController.createOrder)
+router.put("/users/:userId/orders", middleware.Authentication, middleware.Authorization, orderController.updateOrder)
 
 
 
- 
 module.exports = router;

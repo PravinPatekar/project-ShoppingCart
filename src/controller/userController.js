@@ -117,23 +117,23 @@ const loginUser =
             const { email, password } = data  
             
             //=====================Checking the validation=====================//
-            if (!keyValid(data)) return res.status(400).send({ status: false, msg: "Email and Password Required !" })
+            if (!keyValid(data)) return res.status(400).send({ status: false, message: "Email and Password Required !" })
 
             //=====================Validation of EmailID=====================//
-            if (!email) return res.status(400).send({ status: false, msg: "email is required" })
+            if (!email) return res.status(400).send({ status: false, message: "email is required" })
 
 
             //=====================Validation of Password=====================//
-            if (!password) return res.status(400).send({ status: false, msg: "password is required" })
+            if (!password) return res.status(400).send({ status: false, message: "password is required" })
 
             //===================== Checking User exsistance using Email and password=====================//
             const user = await userModel.findOne({ email: email })
-            if (!user) return res.status(400).send({ status: false, msg: "Email is Invalid Please try again !!" })
+            if (!user) return res.status(400).send({ status: false, message: "Email is Invalid Please try again !!" })
 
             const verifyPassword = await bcrypt.compare(password, user.password)
 
 
-            if (!verifyPassword) return res.status(400).send({ status: false, msg: "Password is Invalid Please try again !!" })
+            if (!verifyPassword) return res.status(400).send({ status: false, message: "Password is Invalid Please try again !!" })
 
 
             //===================== Creating Token Using JWT =====================//
@@ -163,24 +163,24 @@ const getUser = async function (req, res) {
 
 
         if (!mongoose.Types.ObjectId.isValid(userId)) {
-            return res.status(400).send({ status: false, msg: "this  UserId is not a valid Id" })
+            return res.status(400).send({ status: false, message: "this  UserId is not a valid Id" })
         }
 
         if (!(isValid(userId) && isValid(userId))) {
-            return res.status(400).send({ status: false, msg: "userId is not valid" });
+            return res.status(400).send({ status: false, message: "userId is not valid" });
         }
         //   if (validator.isValid(body)) {
-        // return res.status(400).send({ status: false, msg: "body should not be empty" });
+        // return res.status(400).send({ status: false, message: "body should not be empty" });
         //   }
 
         const userData = await userModel.findById({ _id: userId });
         if (userData) {
-            return res.status(200).send({ status: true, msg: "user profile details", data: userData });
+            return res.status(200).send({ status: true, message: "successful", data: userData });
         } else {
-            return res.status(404).send({ status: false, msg: "userid does not exist" });
+            return res.status(404).send({ status: false, message: "userid does not exist" });
         }
     } catch (err) {
-        return res.status(500).send({ status: false, msg: err.message });
+        return res.status(500).send({ status: false, message: err.message });
     }
 };
 
@@ -199,12 +199,12 @@ const updateUserProfile = async (req, res) => {
         }
 
         if (!mongoose.Types.ObjectId.isValid(UserId)) {
-            return res.status(400).send({ status: false, msg: "this  UserId is not a valid Id" })
+            return res.status(400).send({ status: false, message: "this  UserId is not a valid Id" })
         }
 
         let findUserId = await userModel.findById(UserId)
         if (!findUserId) {
-            return res.status(404).send({ status: false, msg: "no user found with this UserId" })
+            return res.status(404).send({ status: false, message: "no user found with this UserId" })
         }
 
 
@@ -214,7 +214,7 @@ const updateUserProfile = async (req, res) => {
 
         if (!isString(email)) return res.status(400).send({ status: false, message: "email can not be empty" })
         if (email) {
-            if (!isvalidEmail(email)) return res.status(400).send({ status: false, msg: "Please Enter valid Email" })
+            if (!isvalidEmail(email)) return res.status(400).send({ status: false, message: "Please Enter valid Email" })
         }
         if (!isString(profileImage)) return res.status(400).send({ status: false, message: "profileImage can not be empty" })
         let uploadedFileURL;
@@ -228,13 +228,13 @@ const updateUserProfile = async (req, res) => {
         if (!isString(phone)) return res.status(400).send({ status: false, message: "phone can not be empty" })
 
         if (phone) {
-            if (!isvalidMobile(phone)) return res.status(400).send({ status: false, msg: "Please Enter valid phone Number" })
+            if (!isvalidMobile(phone)) return res.status(400).send({ status: false, message: "Please Enter valid phone Number" })
         }
         if (!isString(password)) return res.status(400).send({ status: false, message: "password can not be empty" })
         let encyptPassword;
 
         if (password) {
-            if (!isValidPassword(password)) return res.status(400).send({ status: false, msg: "please Enter valid Password and it's length should be 8-15" })
+            if (!isValidPassword(password)) return res.status(400).send({ status: false, message: "please Enter valid Password and it's length should be 8-15" })
             const salt = await bcrypt.genSalt(10)
             encyptPassword = await bcrypt.hash(password, salt)
         }
@@ -242,12 +242,12 @@ const updateUserProfile = async (req, res) => {
 
         let existEmail = await userModel.findOne({ email: email })
         if (existEmail) {
-            return res.status(400).send({ status: false, msg: "User with this email is already registered" })
+            return res.status(400).send({ status: false, message: "User with this email is already registered" })
         }
 
         let existphone = await userModel.findOne({ phone: phone })
         if (existphone) {
-            return res.status(400).send({ status: false, msg: "User with this phone number is already registered" })
+            return res.status(400).send({ status: false, message: "User with this phone number is already registered" })
         }
 
         let addressParse;
@@ -303,11 +303,11 @@ const updateUserProfile = async (req, res) => {
             }
 
         }, { new: true })
-        return res.status(200).send({ status: true, message: "user data", data: updatedUser })
+        return res.status(200).send({ status: true, message: "successful ", data: updatedUser })
 
 
     } catch (err) {
-        return res.status(500).send({ status: false, msg: err.message });
+        return res.status(500).send({ status: false, message: err.message });
     }
 }
 
