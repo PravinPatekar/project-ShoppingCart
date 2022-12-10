@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");    // Importing JWT
+ const jwt = require("jsonwebtoken");    // Importing JWT
 const userModel = require("../model/userModel");     // Importing User Model
 const mongoose = require('mongoose')
 
@@ -7,7 +7,8 @@ const isValidObjectId = function (objectid) {
   return mongoose.Types.ObjectId.isValid(objectid)
 }
 
-//=================================================   [MIDDLEWARES]  ===========================================================//
+
+// // //=========================================[Authentication]============================================================
 
 const Authentication = async function (req, res, next) {
   try {
@@ -48,6 +49,7 @@ const Authorization = async (req, res, next) => {
 
     if (!isValidObjectId(loggedInUser))
       return res.status(400).send({ status: false, message: "Enter a valid user Id" });
+      
     let checkUserId = await userModel.findById(loggedInUser);
     if (!checkUserId)
       return res.status(404).send({ status: false, message: "User not found" });
